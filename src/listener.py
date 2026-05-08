@@ -13,6 +13,7 @@ class EngineStatusListener:
         self.db = cantools.database.load_file(dbc_path)
         self.bus = can.Bus(interface="virtual", channel=channel)
         self.received_count = 0
+        self.decoded_signals = []
 
     def listen(self, duration_s: float = 5.0) -> None:
         """Receive frames for a given duration and print decoded signals."""
@@ -24,6 +25,7 @@ class EngineStatusListener:
             try:
                 decoded = self.db.decode_message(frame.arbitration_id, frame.data)
                 self.received_count += 1
+                self.decoded_signals.append(decoded)
                 print(f"[{self.received_count:03d}] ID=0x{frame.arbitration_id:03X} {decoded}")
             except KeyError:
                 pass
