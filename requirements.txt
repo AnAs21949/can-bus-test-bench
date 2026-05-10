@@ -12,3 +12,4 @@ python-can==4.6.1
 textparser==0.24.0
 typing_extensions==4.15.0
 wrapt==1.17.3
+allure-pytest==2.16.0

@@ -222,3 +222,5 @@ __marimo__/
 *.log
 allure-results/
 allure-report/
+
+allure-2.30.0.tgz
