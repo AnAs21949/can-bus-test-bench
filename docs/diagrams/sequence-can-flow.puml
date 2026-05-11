@@ -1,0 +1,55 @@
+@startuml sequence-can-flow
+title CAN Message Flow — Engine ECU → vcan → Listener
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+
+skinparam sequence {
+    ArrowColor          #1F77B4
+    LifeLineBorderColor #888888
+    ParticipantBorderColor  #1F77B4
+    ParticipantBackgroundColor #E1F0FA
+}
+
+actor "pytest\nrunner"      as PYT
+participant "EngineECU\n(src/ecu_simulator.py)" as ECU
+participant "vcan0\n(SocketCAN)"      as BUS
+participant "EngineStatusListener\n(src/listener.py)" as LIS
+database    "DBC\n(powertrain.dbc)"    as DBC
+
+== Setup ==
+PYT -> ECU : __init__(dbc_path, channel)
+ECU -> DBC : load_file()
+DBC --> ECU : message definitions
+PYT -> LIS : __init__(dbc_path, channel)
+LIS -> DBC : load_file()
+DBC --> LIS : message definitions
+
+== Test execution ==
+PYT -> ECU : run(duration=2.0)
+PYT -> LIS : listen(duration=2.0)
+activate ECU
+activate LIS
+
+loop every 100 ms (10 Hz)
+    ECU -> ECU : generate signals\n(rpm, coolant_temp)
+    ECU -> DBC : encode(signals)
+    DBC --> ECU : 8-byte payload
+    ECU -> BUS : send(CAN frame 0x100)
+    BUS -> LIS : receive(frame)
+    LIS -> DBC : decode(payload)
+    DBC --> LIS : {EngineSpeed, CoolantTemperature}
+    LIS -> LIS : received_count++
+end
+
+deactivate ECU
+deactivate LIS
+
+== Assertion ==
+PYT -> LIS : received_count
+LIS --> PYT : 20 frames
+PYT -> PYT : assert |20 - 20| <= 2  ✓
+
+@enduml

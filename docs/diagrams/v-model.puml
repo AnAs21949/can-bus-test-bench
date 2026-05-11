@@ -1,0 +1,51 @@
+@startuml v-model
+title V-Model — CAN Bus Test Bench
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+
+skinparam rectangle {
+    BackgroundColor<<dev>>  #E1F0FA
+    BorderColor<<dev>>      #1F77B4
+    BackgroundColor<<test>> #E6F4EA
+    BorderColor<<test>>     #2CA02C
+    BackgroundColor<<art>>  #FFF4E0
+    BorderColor<<art>>      #FF7F0E
+}
+
+' --- Left side: specification (top-down) ---
+rectangle "**System requirements**\nJIRA epic: CAN Communication" as REQ <<dev>>
+rectangle "**System design**\nDBC: powertrain.dbc" as SYS <<dev>>
+rectangle "**Module design**\nECU sender + Listener" as MOD <<dev>>
+
+' --- Bottom: implementation ---
+rectangle "**Implementation**\nsrc/ecu_simulator.py\nsrc/listener.py" as IMPL <<dev>>
+
+' --- Right side: verification (bottom-up) ---
+rectangle "**Unit tests**\n(future: signal encoding)" as UT <<test>>
+rectangle "**Integration tests**\ntest_signal_range\n(BVA on decoded signals)" as IT <<test>>
+rectangle "**System tests**\ntest_cycle_time\ntest_missing_message" as ST <<test>>
+
+' --- Artifacts ---
+rectangle "**CI + Reporting**\nGitHub Actions\nAllure on Pages" as CI <<art>>
+
+' --- Layout ---
+REQ  -down-> SYS
+SYS  -down-> MOD
+MOD  -down-> IMPL
+IMPL -up->   UT
+UT   -up->   IT
+IT   -up->   ST
+
+' --- Traceability links (horizontal) ---
+REQ -[#FF0000,dashed]right-> ST   : verifies
+SYS -[#FF0000,dashed]right-> IT   : verifies
+MOD -[#FF0000,dashed]right-> UT   : verifies
+
+' --- CI surrounds the whole right side ---
+ST -right-> CI
+
+@enduml
